@@ -117,7 +117,9 @@ In CP5, we focused on integrating **Supabase** as the backend service to enable 
 
 ---
 
-### ✅ Checkpoint 6 – AI Voice Assistant, Quiz Section, and UI Enhancements
+Day 2:- 
+
+### ✅ Checkpoint 1 – AI Voice Assistant, Quiz Section, and UI Enhancements
 
 For CP6, we focused on interactive learning and accessibility by integrating voice AI and quiz features while improving personalization and interface polish.
 
