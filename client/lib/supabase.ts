@@ -1,13 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  import.meta.env.VITE_SUPABASE_URL || "https://demo.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "demo_key";
+const supabaseUrl = "https://fwiooxnuqcwpyzijcmmg.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3aW9veG51cWN3cHl6aWpjbW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5ODA0ODcsImV4cCI6MjA2NzU1NjQ4N30.2p2IPDLzNyL39jYuDHLLRcosbS-FySagbphDYwmvlKY";
 
-export const supabase =
-  supabaseUrl && supabaseAnonKey && supabaseUrl !== "https://demo.supabase.co"
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Database = {
   public: {

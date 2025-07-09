@@ -188,6 +188,7 @@ Improved spacing, padding, and mobile responsiveness
 Created reusable component structure using Tailwind CSS
 
 
+<<<<<<< HEAD
 ✅ README – Day 2: Checkpoint 3
 📹 Checkpoint 3 – Video Call Integration & Live Interaction Setup
 In this checkpoint, we focused on enabling real-time collaboration between users through secure and seamless video communication.
@@ -217,3 +218,5 @@ Made layout responsive for video-enabled workflows
 ✅ This update makes peer-to-peer learning more immersive through live video help sessions.
 
 
+=======
+>>>>>>> 08eed6c (feat(day 2 - check point 4): completed backend, integrated doubts system, improved UI)

@@ -77,7 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
       });
-      if (error) throw error;
+      if (error) {
+        // Ignore "email not confirmed" error and proceed to fetch session
+        if (error.message && error.message.toLowerCase().includes("email not confirmed")) {
+          const { data, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) throw sessionError;
+          if (data?.session?.user) {
+            setUser(data.session.user);
+            return;
+          } else {
+            throw error; // No session, throw original error
+          }
+        } else {
+          throw error;
+        }
+      }
     } else {
       // Mock authentication for demo
       const mockUser = {

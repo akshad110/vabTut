@@ -35,6 +35,7 @@ import { VoiceCall } from "@/components/communication/VoiceCall";
 import { Chat } from "@/components/communication/Chat";
 import { VoiceDoubtPosting } from "@/components/ui/voice-doubt-posting";
 import { ZegoVideoConference } from "@/components/communication/ZegoVideoConference";
+
 import {
   Plus,
   Search,
@@ -52,6 +53,16 @@ import {
   Edit3,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  getDoubts,
+  createDoubt,
+  takeDoubt,
+  resolveDoubt,
+  subscribeToDoubts,
+  filterDoubts,
+  type DoubtRecord,
+  type CreateDoubtData,
+} from "@/lib/doubts";
 
 export default function Doubts() {
   const { user } = useAuth();
@@ -81,110 +92,8 @@ export default function Doubts() {
   const [zegoVideoOpen, setZegoVideoOpen] = useState(false);
   const [zegoRoomID, setZegoRoomID] = useState<string | null>(null);
 
-  const [doubts, setDoubts] = useState([
-    {
-      id: "1",
-      title: "Help with calculus derivatives",
-      description:
-        "I'm struggling to understand the concept of derivatives in calculus. Specifically, I need help with the chain rule and how to apply it to complex functions. I've watched videos but still can't grasp when to use which method.",
-      subject: "Mathematics",
-      difficulty: "medium",
-      status: "open",
-      reward_coins: 50,
-      student_id: "student1",
-      student_name: "Rahul Kumar",
-      tutor_id: null,
-      tutor_name: null,
-      created_at: "2024-01-15T10:30:00Z",
-      responses: 3,
-      rating: null,
-    },
-    {
-      id: "2",
-      title: "Physics momentum conservation",
-      description:
-        "Can someone explain momentum conservation in collisions? I have a problem where two objects collide and I need to find their final velocities. The textbook explanation is confusing me.",
-      subject: "Physics",
-      difficulty: "hard",
-      status: "in_progress",
-      reward_coins: 75,
-      student_id: "student2",
-      student_name: "Priya Singh",
-      tutor_id: "tutor1",
-      tutor_name: "Aarav Sharma",
-      created_at: "2024-01-15T08:15:00Z",
-      responses: 5,
-      rating: null,
-    },
-    {
-      id: "3",
-      title: "Chemistry bonding concepts",
-      description:
-        "I need help understanding ionic vs covalent bonding. What determines which type of bond forms between different elements? Examples would be helpful!",
-      subject: "Chemistry",
-      difficulty: "easy",
-      status: "resolved",
-      reward_coins: 25,
-      student_id: "student3",
-      student_name: "Anita Patel",
-      tutor_id: "tutor2",
-      tutor_name: "Priya Patel",
-      created_at: "2024-01-14T16:45:00Z",
-      responses: 7,
-      rating: 4.8,
-    },
-    {
-      id: "4",
-      title: "Computer Science algorithms",
-      description:
-        "Need help with understanding time complexity analysis. How do I calculate Big O notation for recursive algorithms? I'm preparing for technical interviews.",
-      subject: "Computer Science",
-      difficulty: "hard",
-      status: "open",
-      reward_coins: 100,
-      student_id: "student4",
-      student_name: "Vikram Gupta",
-      tutor_id: null,
-      tutor_name: null,
-      created_at: "2024-01-15T14:20:00Z",
-      responses: 1,
-      rating: null,
-    },
-    {
-      id: "5",
-      title: "English literature analysis",
-      description:
-        "How do I analyze themes in Shakespeare's plays? I'm working on Macbeth and need help identifying literary devices and their significance.",
-      subject: "English",
-      difficulty: "medium",
-      status: "open",
-      reward_coins: 40,
-      student_id: "student5",
-      student_name: "Meera Shah",
-      tutor_id: null,
-      tutor_name: null,
-      created_at: "2024-01-15T12:00:00Z",
-      responses: 2,
-      rating: null,
-    },
-    {
-      id: "6",
-      title: "Biology cell division",
-      description:
-        "Can someone explain the difference between mitosis and meiosis? I understand the basics but need help with the specific phases and their purposes.",
-      subject: "Biology",
-      difficulty: "medium",
-      status: "in_progress",
-      reward_coins: 60,
-      student_id: "student6",
-      student_name: "Arjun Reddy",
-      tutor_id: "tutor3",
-      tutor_name: "Dr. Sarah Wilson",
-      created_at: "2024-01-15T09:30:00Z",
-      responses: 4,
-      rating: null,
-    },
-  ]);
+  const [doubts, setDoubts] = useState<DoubtRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [newDoubt, setNewDoubt] = useState({
     title: "",
@@ -204,38 +113,43 @@ export default function Doubts() {
     "History",
   ];
 
-  interface Doubt {
-    id: string;
-    title: string;
-    description: string;
-    subject: string;
-    difficulty: string;
-    status: string;
-    reward_coins: number;
-    student_id: string;
-    student_name: string;
-    tutor_id: string | null;
-    tutor_name: string | null;
-    created_at: string;
-    responses: number;
-    rating: number | null;
-  }
+  // Load doubts from Supabase on component mount
+  useEffect(() => {
+    loadDoubts();
 
-  // Ensure filteredDoubts is always Doubt[]
-  const filteredDoubts: Doubt[] = doubts
-    .filter((doubt) =>
-      selectedSubject === "all" ? true : doubt.subject === selectedSubject
-    )
-    .filter((doubt) =>
-      selectedDifficulty === "all" ? true : doubt.difficulty === selectedDifficulty
-    )
-    .filter((doubt) =>
-      selectedStatus === "all" ? true : doubt.status === selectedStatus
-    )
-    .filter((doubt) =>
-      doubt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doubt.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Subscribe to real-time updates
+    const subscription = subscribeToDoubts((updatedDoubts) => {
+      setDoubts(updatedDoubts);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const loadDoubts = async () => {
+    setLoading(true);
+    try {
+      const fetchedDoubts = await getDoubts();
+      setDoubts(fetchedDoubts);
+    } catch (error) {
+      console.error("Error loading doubts:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load doubts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredDoubts = filterDoubts(doubts, {
+    searchTerm,
+    subject: selectedSubject,
+    difficulty: selectedDifficulty,
+    status: selectedStatus,
+  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -273,53 +187,97 @@ export default function Doubts() {
       return;
     }
 
-    const doubt = {
-      id: Date.now().toString(),
-      ...newDoubt,
-      status: "open" as const,
-      student_id: user?.id || "anonymous",
-      student_name: user?.user_metadata?.name || "Anonymous",
-      tutor_id: null,
-      tutor_name: null,
-      created_at: new Date().toISOString(),
-      responses: 0,
-      rating: null,
-    };
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to post a doubt.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setDoubts([doubt, ...doubts]);
-    setNewDoubt({
-      title: "",
-      description: "",
-      subject: "",
-      difficulty: "medium",
-      reward_coins: 50,
-    });
-    setIsCreateModalOpen(false);
+    try {
+      const createdDoubt = await createDoubt(
+        newDoubt,
+        user.id,
+        user.user_metadata?.name || user.email || "Anonymous",
+      );
 
-    toast({
-      title: "Success!",
-      description: "Your doubt has been posted successfully.",
-    });
+      if (createdDoubt) {
+        setNewDoubt({
+          title: "",
+          description: "",
+          subject: "",
+          difficulty: "medium",
+          reward_coins: 50,
+        });
+        setIsCreateModalOpen(false);
+
+        toast({
+          title: "Success!",
+          description: "Your doubt has been posted successfully.",
+        });
+
+        // Reload doubts to get the latest data
+        loadDoubts();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to post your doubt. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating doubt:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleTakeDoubt = (doubtId: string) => {
-    setDoubts(
-      doubts.map((doubt) =>
-        doubt.id === doubtId
-          ? {
-              ...doubt,
-              status: "in_progress" as const,
-              tutor_id: user?.id || "current_user",
-              tutor_name: user?.user_metadata?.name || "Current User",
-            }
-          : doubt,
-      ),
-    );
+  const handleTakeDoubt = async (doubtId: string) => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to take a doubt.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Success!",
-      description: "You've taken this doubt. Start helping the student!",
-    });
+    try {
+      const success = await takeDoubt(
+        doubtId,
+        user.id,
+        user.user_metadata?.name || user.email || "Anonymous",
+      );
+
+      if (success) {
+        toast({
+          title: "Success!",
+          description: "You've taken this doubt. Start helping the student!",
+        });
+
+        // Reload doubts to get the latest data
+        loadDoubts();
+      } else {
+        toast({
+          title: "Error",
+          description:
+            "Failed to take the doubt. It may have been taken by someone else.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error taking doubt:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -335,9 +293,12 @@ export default function Doubts() {
   };
 
   const startVideoCall = (doubt: any) => {
-    // Only open Zego video conference with roomID as doubt id
-    setZegoRoomID(doubt.id);
-    setZegoVideoOpen(true);
+    const participantName = doubt.tutor_name || doubt.student_name;
+    setActiveVideoCall({
+      isOpen: true,
+      participantName,
+      doubtTitle: doubt.title,
+    });
   };
 
   const startVoiceCall = (doubt: any) => {
@@ -392,78 +353,89 @@ export default function Doubts() {
                   </DialogDescription>
                 </DialogHeader>
 
-                  <VoiceDoubtPosting
-                    onSubmit={async (doubtData) => {
-                      // Validate the data first
-                      if (
-                        !doubtData.title ||
-                        !doubtData.description ||
-                        !doubtData.subject
-                      ) {
-                        toast({
-                          title: "Error",
-                          description: "Please fill in all required fields.",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
+                <VoiceDoubtPosting
+                  onSubmit={async (doubtData) => {
+                    // Validate the data first
+                    if (
+                      !doubtData.title ||
+                      !doubtData.description ||
+                      !doubtData.subject
+                    ) {
+                      toast({
+                        title: "Error",
+                        description: "Please fill in all required fields.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
 
-                      try {
-                        const { data, error } = await supabase
-                          .from("doubts")
-                          .insert([
-                            {
-                              title: doubtData.title,
-                              description: doubtData.description,
-                              subject: doubtData.subject,
-                              difficulty: doubtData.difficulty,
-                              reward: doubtData.reward_coins,
-                              status: "open",
-                              student_id: user?.id || "anonymous",
-                              student_name: user?.user_metadata?.name || "Anonymous",
-                              tutor_id: null,
-                              tutor_name: null,
-                              created_at: new Date().toISOString(),
-                              updated_at: new Date().toISOString(),
-                            },
-                          ]);
+                    try {
+                      // Generate a unique ID for the new doubt
+                      const newId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-                        if (error) throw error;
-                        if (!data || data.length === 0) throw new Error("No data returned from insert");
-
-                        // Add the new doubt to local state
-                        setDoubts([
+                      const { data, error } = await supabase
+                        .from("doubts")
+                        .insert([
                           {
-                            id: (data as any)[0].id,
-                            ...doubtData,
+                            id: newId,
+                            title: doubtData.title,
+                            description: doubtData.description,
+                            subject: doubtData.subject,
+                            difficulty: doubtData.difficulty,
+                            reward_coins: doubtData.reward_coins,
                             status: "open",
                             student_id: user?.id || "anonymous",
                             student_name: user?.user_metadata?.name || "Anonymous",
                             tutor_id: null,
                             tutor_name: null,
                             created_at: new Date().toISOString(),
-                            responses: 0,
-                            rating: null,
+                            updated_at: new Date().toISOString(),
                           },
-                          ...doubts,
-                        ]);
+                        ])
+                        .select(); // <-- This tells Supabase to return the inserted row(s)
 
-                        setIsCreateModalOpen(false);
+                      if (!data || (data as any).length === 0) throw new Error("No data returned from insert");
 
-                        toast({
-                          title: "Success!",
-                          description: "Your doubt has been posted successfully.",
-                        });
-                      } catch (error: any) {
-                        toast({
-                          title: "Error",
-                          description: error.message || "Failed to post doubt.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                    onCancel={() => setIsCreateModalOpen(false)}
-                  />
+                      // Add the new doubt to local state
+                      setDoubts([
+                        {
+                          id: newId,
+                          title: doubtData.title,
+                          description: doubtData.description,
+                          subject: doubtData.subject,
+                          difficulty: doubtData.difficulty,
+                          reward_coins: doubtData.reward_coins,
+                          status: "open",
+                          student_id: user?.id || "anonymous",
+                          student_name: user?.user_metadata?.name || "Anonymous",
+                          tutor_id: null,
+                          tutor_name: null,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                          responses: 0,
+                          rating: null,
+                        },
+                        ...doubts,
+                      ]);
+
+                      setIsCreateModalOpen(false);
+
+                      toast({
+                        title: "Success!",
+                        description: "Your doubt has been posted successfully.",
+                      });
+                    } catch (error: any) {
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to post doubt.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  onCancel={() => setIsCreateModalOpen(false)}
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -535,130 +507,142 @@ export default function Doubts() {
             </CardContent>
           </Card>
 
-          <div className="grid gap-6">
-            {filteredDoubts.map((doubt) => (
-              <Card
-                key={doubt.id}
-                className="hover:shadow-lg transition-all duration-300"
-              >
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-2">
-                        {doubt.title}
-                      </CardTitle>
-                      <CardDescription className="text-sm">
-                        {doubt.description}
-                      </CardDescription>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-3 text-muted-foreground">
+                Loading doubts...
+              </span>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {filteredDoubts.map((doubt) => (
+                <Card
+                  key={doubt.id}
+                  className="hover:shadow-lg transition-all duration-300"
+                >
+                  <CardHeader>
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2">
+                          {doubt.title}
+                        </CardTitle>
+                        <CardDescription className="text-sm">
+                          {doubt.description}
+                        </CardDescription>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Coins className="h-4 w-4 text-yellow-500" />
+                        <span className="font-semibold text-lg">
+                          {doubt.reward_coins}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Coins className="h-4 w-4 text-yellow-500" />
-                      <span className="font-semibold text-lg">
-                        {doubt.reward_coins}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 mt-4">
-                    <Badge variant="outline">{doubt.subject}</Badge>
-                    <Badge
-                      className={getDifficultyColor(doubt.difficulty)}
-                      variant="secondary"
-                    >
-                      {doubt.difficulty}
-                    </Badge>
-                    <Badge
-                      className={getStatusColor(doubt.status)}
-                      variant="secondary"
-                    >
-                      {doubt.status}
-                    </Badge>
-                    {doubt.rating && (
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                      <Badge variant="outline">{doubt.subject}</Badge>
                       <Badge
-                        variant="outline"
-                        className="flex items-center gap-1"
+                        className={getDifficultyColor(doubt.difficulty)}
+                        variant="secondary"
                       >
-                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                        {doubt.rating}
+                        {doubt.difficulty}
                       </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>Posted by {doubt.student_name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatTimeAgo(doubt.created_at)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{doubt.responses} responses</span>
-                      </div>
-                      {doubt.tutor_name && (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span>Tutored by {doubt.tutor_name}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {doubt.status === "open" && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleTakeDoubt(doubt.id)}
+                      <Badge
+                        className={getStatusColor(doubt.status)}
+                        variant="secondary"
+                      >
+                        {doubt.status}
+                      </Badge>
+                      {doubt.rating && (
+                        <Badge
+                          variant="outline"
+                          className="flex items-center gap-1"
                         >
-                          Take Doubt
-                        </Button>
+                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                          {doubt.rating}
+                        </Badge>
                       )}
-
-                      {doubt.status === "in_progress" && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startChat(doubt)}
-                          >
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            Chat
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startVoiceCall(doubt)}
-                          >
-                            <Phone className="h-4 w-4 mr-1" />
-                            Call
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => startVideoCall(doubt)}
-                          >
-                            <Video className="h-4 w-4 mr-1" />
-                            Video
-                          </Button>
-                        </div>
-                      )}
-
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardHeader>
 
-          {Array.isArray(filteredDoubts) && filteredDoubts.length === 0 ? (
+                  <CardContent>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <User className="h-4 w-4" />
+                          <span>Posted by {doubt.student_name}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatTimeAgo(doubt.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="h-4 w-4" />
+                          <span>{doubt.responses} responses</span>
+                        </div>
+                        {doubt.tutor_name && (
+                          <div className="flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span>Tutored by {doubt.tutor_name}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {doubt.status === "open" && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleTakeDoubt(doubt.id)}
+                          >
+                            Take Doubt
+                          </Button>
+                        )}
+
+                        {doubt.status === "in_progress" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => startChat(doubt)}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              Chat
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => startVoiceCall(doubt)}
+                            >
+                              <Phone className="h-4 w-4 mr-1" />
+                              Call
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setZegoRoomID(doubt.id);
+                                setZegoVideoOpen(true);
+                              }}
+                            >
+                              <Video className="h-4 w-4 mr-1" />
+                              Video
+                            </Button>
+                          </div>
+                        )}
+
+                        <Button size="sm" variant="outline">
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredDoubts.length === 0 && (
             <Card>
               <CardContent className="p-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -668,11 +652,23 @@ export default function Doubts() {
                 </p>
               </CardContent>
             </Card>
-          ) : null}
+          )}
         </div>
 
         {/* Communication Components */}
-        {/* Removed old VideoCall component */}
+        <VideoCall
+          isOpen={activeVideoCall.isOpen}
+          onClose={() =>
+            setActiveVideoCall({
+              isOpen: false,
+              participantName: "",
+              doubtTitle: "",
+            })
+          }
+          participantName={activeVideoCall.participantName}
+          doubtTitle={activeVideoCall.doubtTitle}
+        />
+
         <VoiceCall
           isOpen={activeVoiceCall.isOpen}
           onClose={() =>
