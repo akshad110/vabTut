@@ -188,3 +188,32 @@ Improved spacing, padding, and mobile responsiveness
 Created reusable component structure using Tailwind CSS
 
 
+✅ README – Day 2: Checkpoint 3
+📹 Checkpoint 3 – Video Call Integration & Live Interaction Setup
+In this checkpoint, we focused on enabling real-time collaboration between users through secure and seamless video communication.
+
+🧑‍🏫 Zego Video Call Integration
+
+Integrated ZegoCloud to allow 1-on-1 peer video sessions
+
+Configured room-based sessions using doubt.id as unique room ID
+
+Enabled "Start Video Call" button on active doubts
+
+📡 Real-Time Interaction Flow
+
+Handled state for joining/leaving sessions dynamically
+
+Triggered video interface only during active sessions
+
+Prepared the base for upcoming voice/chat layer integrations
+
+🧪 UI Improvements
+
+Polished interaction components like buttons and card status
+
+Made layout responsive for video-enabled workflows
+
+✅ This update makes peer-to-peer learning more immersive through live video help sessions.
+
+
