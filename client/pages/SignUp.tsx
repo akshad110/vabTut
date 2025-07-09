@@ -52,8 +52,7 @@ export default function SignUp() {
       await signUp(email, password, name);
       toast({
         title: "Success!",
-        description:
-          "Account created successfully. Please check your email to verify your account.",
+        description: "Account created successfully.",
       });
       navigate("/signin");
     } catch (error: any) {

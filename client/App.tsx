@@ -19,6 +19,9 @@ import VabTutAI from "./pages/VabTutAI";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import BrowseDoubts from "./pages/BrowseDoubts";
+import StudyGroups from "./pages/StudyGroups";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +131,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/browse-doubts"
+        element={
+          <ProtectedRoute>
+            <BrowseDoubts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/study-groups"
+        element={
+          <ProtectedRoute>
+            <StudyGroups />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leaderboard"
+        element={
+          <ProtectedRoute>
+            <Leaderboard />
           </ProtectedRoute>
         }
       />

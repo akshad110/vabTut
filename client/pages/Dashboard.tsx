@@ -252,7 +252,12 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Help other students and earn coins
                 </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/browse-doubts")}
+                >
                   View All Doubts
                 </Button>
               </CardContent>
@@ -267,7 +272,12 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Join or create study sessions
                 </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/study-groups")}
+                >
                   Find Groups
                 </Button>
               </CardContent>
@@ -282,7 +292,12 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground mb-4">
                   See how you rank among peers
                 </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => navigate("/leaderboard")}
+                >
                   View Rankings
                 </Button>
               </CardContent>

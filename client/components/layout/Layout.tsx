@@ -1,5 +1,7 @@
+import * as React from "react";
 import { ReactNode } from "react";
 import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +13,7 @@ export function Layout({ children, showNavbar = true }: LayoutProps) {
     <div className="min-h-screen bg-background">
       {showNavbar && <Navbar />}
       <main className={showNavbar ? "pt-16" : ""}>{children}</main>
+      <Footer />
     </div>
   );
 }

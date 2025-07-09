@@ -6,7 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
@@ -26,23 +26,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = user?.email === "vibhu123@gmail.com" && user?.id === "admin";
 
   useEffect(() => {
-    if (supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
+    const initializeUser = async () => {
+      if (!supabase) {
+        setUser(null);
         setLoading(false);
-      });
-
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      });
-
-      return () => subscription.unsubscribe();
-    } else {
+        return;
+      }
+      const { data, error } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        setUser(data.session.user);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
+    };
+
+    initializeUser();
+
+    if (!supabase) {
+      return;
     }
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -83,16 +95,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string) => {
     if (supabase) {
-      const { error } = await supabase.auth.signUp({
+      // Disable email confirmation by setting email_confirm: true in options (if supported)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: undefined, // Remove redirect to disable email confirmation flow
           data: {
             name,
           },
         },
       });
       if (error) throw error;
+
+      // Sign in the user to get session
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) throw signInError;
+
+      // Upsert user metadata into users table
+      if (signInData?.user) {
+        const { id, email } = signInData.user;
+        const { error: upsertError } = await supabase.from("users").upsert([
+          {
+            id,
+            email,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        if (upsertError) {
+          console.error("Failed to upsert user metadata:", upsertError);
+          throw upsertError; // Throw error to notify caller
+        }
+      }
     } else {
       // Mock sign up for demo
       const mockUser = {

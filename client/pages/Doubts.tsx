@@ -29,10 +29,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { VideoCall } from "@/components/communication/VideoCall";
 import { VoiceCall } from "@/components/communication/VoiceCall";
 import { Chat } from "@/components/communication/Chat";
 import { VoiceDoubtPosting } from "@/components/ui/voice-doubt-posting";
+import { ZegoVideoConference } from "@/components/communication/ZegoVideoConference";
 import {
   Plus,
   Search,
@@ -74,6 +76,10 @@ export default function Doubts() {
     participantName: string;
     doubtTitle: string;
   }>({ isOpen: false, participantName: "", doubtTitle: "" });
+
+  // State for Zego video conference
+  const [zegoVideoOpen, setZegoVideoOpen] = useState(false);
+  const [zegoRoomID, setZegoRoomID] = useState<string | null>(null);
 
   const [doubts, setDoubts] = useState([
     {
@@ -198,7 +204,24 @@ export default function Doubts() {
     "History",
   ];
 
-  const filteredDoubts = doubts.filter((doubt) => {
+  interface Doubt {
+    id: string;
+    title: string;
+    description: string;
+    subject: string;
+    difficulty: string;
+    status: string;
+    reward_coins: number;
+    student_id: string;
+    student_name: string;
+    tutor_id: string | null;
+    tutor_name: string | null;
+    created_at: string;
+    responses: number;
+    rating: number | null;
+  }
+
+  const filteredDoubts: Doubt[] = doubts.filter((doubt: Doubt) => {
     const matchesSearch =
       doubt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doubt.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -318,6 +341,9 @@ export default function Doubts() {
       participantName,
       doubtTitle: doubt.title,
     });
+    // Open Zego video conference with roomID as doubt id
+    setZegoRoomID(doubt.id);
+    setZegoVideoOpen(true);
   };
 
   const startVoiceCall = (doubt: any) => {
@@ -372,46 +398,78 @@ export default function Doubts() {
                   </DialogDescription>
                 </DialogHeader>
 
-                <VoiceDoubtPosting
-                  onSubmit={async (doubtData) => {
-                    // Validate the data first
-                    if (
-                      !doubtData.title ||
-                      !doubtData.description ||
-                      !doubtData.subject
-                    ) {
-                      toast({
-                        title: "Error",
-                        description: "Please fill in all required fields.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
+                  <VoiceDoubtPosting
+                    onSubmit={async (doubtData) => {
+                      // Validate the data first
+                      if (
+                        !doubtData.title ||
+                        !doubtData.description ||
+                        !doubtData.subject
+                      ) {
+                        toast({
+                          title: "Error",
+                          description: "Please fill in all required fields.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
 
-                    // Create the doubt directly
-                    const doubt = {
-                      id: Date.now().toString(),
-                      ...doubtData,
-                      status: "open" as const,
-                      student_id: user?.id || "anonymous",
-                      student_name: user?.user_metadata?.name || "Anonymous",
-                      tutor_id: null,
-                      tutor_name: null,
-                      created_at: new Date().toISOString(),
-                      responses: 0,
-                      rating: null,
-                    };
+                      try {
+                        const { data, error } = await supabase
+                          .from("doubts")
+                          .insert([
+                            {
+                              title: doubtData.title,
+                              description: doubtData.description,
+                              subject: doubtData.subject,
+                              difficulty: doubtData.difficulty,
+                              reward: doubtData.reward_coins,
+                              status: "open",
+                              student_id: user?.id || "anonymous",
+                              student_name: user?.user_metadata?.name || "Anonymous",
+                              tutor_id: null,
+                              tutor_name: null,
+                              created_at: new Date().toISOString(),
+                              updated_at: new Date().toISOString(),
+                            },
+                          ]);
 
-                    setDoubts([doubt, ...doubts]);
-                    setIsCreateModalOpen(false);
+                        if (error) throw error;
+                        if (!data || data.length === 0) throw new Error("No data returned from insert");
 
-                    toast({
-                      title: "Success!",
-                      description: "Your doubt has been posted successfully.",
-                    });
-                  }}
-                  onCancel={() => setIsCreateModalOpen(false)}
-                />
+                        // Add the new doubt to local state
+                        setDoubts([
+                          {
+                            id: (data as any)[0].id,
+                            ...doubtData,
+                            status: "open",
+                            student_id: user?.id || "anonymous",
+                            student_name: user?.user_metadata?.name || "Anonymous",
+                            tutor_id: null,
+                            tutor_name: null,
+                            created_at: new Date().toISOString(),
+                            responses: 0,
+                            rating: null,
+                          },
+                          ...doubts,
+                        ]);
+
+                        setIsCreateModalOpen(false);
+
+                        toast({
+                          title: "Success!",
+                          description: "Your doubt has been posted successfully.",
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.message || "Failed to post doubt.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    onCancel={() => setIsCreateModalOpen(false)}
+                  />
               </DialogContent>
             </Dialog>
           </div>
@@ -606,7 +664,7 @@ export default function Doubts() {
             ))}
           </div>
 
-          {filteredDoubts.length === 0 && (
+          {Array.isArray(filteredDoubts) && filteredDoubts.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -616,7 +674,7 @@ export default function Doubts() {
                 </p>
               </CardContent>
             </Card>
-          )}
+          ) : null}
         </div>
 
         {/* Communication Components */}
@@ -658,6 +716,14 @@ export default function Doubts() {
           participantName={activeChat.participantName}
           doubtTitle={activeChat.doubtTitle}
         />
+        {zegoVideoOpen && (
+          <ZegoVideoConference
+            roomID={zegoRoomID || undefined}
+            userID={user?.id || undefined}
+            userName={user?.user_metadata?.name || undefined}
+            key={zegoRoomID || undefined}
+          />
+        )}
       </div>
     </Layout>
   );
