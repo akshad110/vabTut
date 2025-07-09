@@ -221,21 +221,21 @@ export default function Doubts() {
     rating: number | null;
   }
 
-  const filteredDoubts: Doubt[] = doubts.filter((doubt: Doubt) => {
-    const matchesSearch =
+  // Ensure filteredDoubts is always Doubt[]
+  const filteredDoubts: Doubt[] = doubts
+    .filter((doubt) =>
+      selectedSubject === "all" ? true : doubt.subject === selectedSubject
+    )
+    .filter((doubt) =>
+      selectedDifficulty === "all" ? true : doubt.difficulty === selectedDifficulty
+    )
+    .filter((doubt) =>
+      selectedStatus === "all" ? true : doubt.status === selectedStatus
+    )
+    .filter((doubt) =>
       doubt.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doubt.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject =
-      selectedSubject === "all" || doubt.subject === selectedSubject;
-    const matchesDifficulty =
-      selectedDifficulty === "all" || doubt.difficulty === selectedDifficulty;
-    const matchesStatus =
-      selectedStatus === "all" || doubt.status === selectedStatus;
-
-    return (
-      matchesSearch && matchesSubject && matchesDifficulty && matchesStatus
+      doubt.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -335,13 +335,7 @@ export default function Doubts() {
   };
 
   const startVideoCall = (doubt: any) => {
-    const participantName = doubt.tutor_name || doubt.student_name;
-    setActiveVideoCall({
-      isOpen: true,
-      participantName,
-      doubtTitle: doubt.title,
-    });
-    // Open Zego video conference with roomID as doubt id
+    // Only open Zego video conference with roomID as doubt id
     setZegoRoomID(doubt.id);
     setZegoVideoOpen(true);
   };
@@ -678,19 +672,7 @@ export default function Doubts() {
         </div>
 
         {/* Communication Components */}
-        <VideoCall
-          isOpen={activeVideoCall.isOpen}
-          onClose={() =>
-            setActiveVideoCall({
-              isOpen: false,
-              participantName: "",
-              doubtTitle: "",
-            })
-          }
-          participantName={activeVideoCall.participantName}
-          doubtTitle={activeVideoCall.doubtTitle}
-        />
-
+        {/* Removed old VideoCall component */}
         <VoiceCall
           isOpen={activeVoiceCall.isOpen}
           onClose={() =>
@@ -717,12 +699,29 @@ export default function Doubts() {
           doubtTitle={activeChat.doubtTitle}
         />
         {zegoVideoOpen && (
-          <ZegoVideoConference
-            roomID={zegoRoomID || undefined}
-            userID={user?.id || undefined}
-            userName={user?.user_metadata?.name || undefined}
-            key={zegoRoomID || undefined}
-          />
+          <Dialog open={zegoVideoOpen} onOpenChange={setZegoVideoOpen}>
+            <DialogContent className="max-w-5xl w-full h-[90vh] p-0 flex flex-col items-center justify-center">
+              <DialogHeader className="p-4 border-b border-gray-700 bg-gray-900 w-full">
+                <DialogTitle className="text-lg font-semibold text-white flex justify-between items-center w-full">
+                  Video Call
+                  <button
+                    className="ml-auto text-white bg-red-600 hover:bg-red-700 rounded px-3 py-1 text-sm"
+                    onClick={() => setZegoVideoOpen(false)}
+                  >
+                    Close
+                  </button>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 w-full flex items-center justify-center">
+                <ZegoVideoConference
+                  roomID={zegoRoomID || undefined}
+                  userID={user?.id || undefined}
+                  userName={user?.user_metadata?.name || undefined}
+                  key={zegoRoomID || undefined}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </Layout>

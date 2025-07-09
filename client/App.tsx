@@ -22,6 +22,8 @@ import NotFound from "./pages/NotFound";
 import BrowseDoubts from "./pages/BrowseDoubts";
 import StudyGroups from "./pages/StudyGroups";
 import Leaderboard from "./pages/Leaderboard";
+import { ZegoVideoConference } from "./components/communication/ZegoVideoConference";
+import React, { useState } from "react";
 
 const queryClient = new QueryClient();
 
@@ -163,20 +165,22 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+const App = () => {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

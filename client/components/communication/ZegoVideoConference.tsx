@@ -18,6 +18,7 @@ export const ZegoVideoConference: React.FC<ZegoVideoConferenceProps> = ({
   userName,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const zpRef = useRef<any>(null);
 
   useEffect(() => {
     if (!window.ZegoUIKitPrebuilt) {
@@ -47,6 +48,7 @@ export const ZegoVideoConference: React.FC<ZegoVideoConferenceProps> = ({
     );
 
     const zp = window.ZegoUIKitPrebuilt.create(kitToken);
+    zpRef.current = zp;
     if (containerRef.current) {
       zp.joinRoom({
         container: containerRef.current,
@@ -78,7 +80,17 @@ export const ZegoVideoConference: React.FC<ZegoVideoConferenceProps> = ({
         showLayoutButton: false,
       });
     }
+
+    // CLEANUP: destroy Zego instance on unmount
+    return () => {
+      if (zpRef.current && typeof zpRef.current.destroy === "function") {
+        zpRef.current.destroy();
+      }
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+    };
   }, [roomID, userID, userName]);
 
-  return <div id="root" ref={containerRef} style={{ width: "100vw", height: "100vh" }} />;
+  return <div id="zego-video-container" ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 };
