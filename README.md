@@ -158,3 +158,33 @@ client/
 server/
 ├── routes/topics.ts # Topics API
 └── index.ts # Backend entry point
+
+ Day 2: Checkpoint 2
+🧩 Checkpoint 2 – Login/Signup UI & Basic Dashboard
+In this checkpoint, we focused on building the user interaction flow and enhancing the visual consistency of the platform.
+
+🔐 Authentication UI
+
+Designed clean, responsive Login and Signup pages
+
+Fields include email, password, and name
+
+Interface ready for Firebase or Supabase integration
+
+📊 Demo Dashboard Setup
+
+Created a User Dashboard displaying dummy recent doubts
+
+Includes a "Post a Doubt" section for future integration
+
+Simple listing layout for recent peer questions
+
+🎨 UI Enhancements
+
+Added footer section with minimal branding
+
+Improved spacing, padding, and mobile responsiveness
+
+Created reusable component structure using Tailwind CSS
+
+
