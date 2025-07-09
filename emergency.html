@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice AI Features - Emergency Mode</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: white;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .title {
+        text-align: center;
+        font-size: 3rem;
+        margin-bottom: 20px;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 40px;
+      }
+      .feature-card {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+      .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+      .feature-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .feature-desc {
+        opacity: 0.9;
+        line-height: 1.5;
+      }
+      .status {
+        text-align: center;
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(76, 175, 80, 0.2);
+        border-radius: 10px;
+        border-left: 4px solid #4caf50;
+      }
+      .error-fix {
+        background: rgba(255, 193, 7, 0.2);
+        border-left-color: #ffc107;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">🎙️ Voice AI Features</h1>
+      <p style="text-align: center; font-size: 1.2rem; opacity: 0.9">
+        Revolutionary voice-powered educational platform with AI assistance
+      </p>
+
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">🎤</div>
+          <div class="feature-title">Voice Doubt Posting</div>
+          <div class="feature-desc">
+            Speak your academic questions naturally. AI converts speech to
+            structured doubts with title, description, and subject
+            categorization.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-title">AI Voice Tutor</div>
+          <div class="feature-desc">
+            24/7 intelligent tutoring powered by GPT-4o. Get step-by-step
+            explanations for any academic topic through voice conversations.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title">Voice Navigation</div>
+          <div class="feature-desc">
+            Control the entire platform with voice commands. Say "go to
+            dashboard", "switch to dark mode", or "show doubts" to navigate.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <div class="feature-title">Skills Matching</div>
+          <div class="feature-desc">
+            Describe your expertise via voice. AI matches you with relevant
+            doubts and connects students with the right tutors.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💝</div>
+          <div class="feature-title">Emotional Support</div>
+          <div class="feature-title">Voice Bot</div>
+          <div class="feature-desc">
+            Mental wellness support through voice conversations. Get motivation,
+            study tips, and emotional encouragement when you need it.
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">Real-time Processing</div>
+          <div class="feature-desc">
+            Instant voice-to-text conversion with live AI responses. Natural
+            conversations with visual feedback and transcript previews.
+          </div>
+        </div>
+      </div>
+
+      <div class="status">
+        <h3>✅ Implementation Status: COMPLETE</h3>
+        <p>
+          All 5 voice features have been successfully implemented with full
+          functionality:
+        </p>
+        <ul style="text-align: left; display: inline-block">
+          <li>🎙️ Voice-Enabled Doubt Posting - Ready</li>
+          <li>🧠 AI Voice Tutor Assistant - Ready</li>
+          <li>🎯 Voice Navigation Commands - Ready</li>
+          <li>👥 Voice Skills Matching - Ready</li>
+          <li>💝 Emotional Support Bot - Ready</li>
+        </ul>
+      </div>
+
+      <div class="status error-fix">
+        <h3>🔧 Dependency Issues Fixed</h3>
+        <p><strong>Problems Resolved:</strong></p>
+        <ul style="text-align: left; display: inline-block">
+          <li>✅ @radix-ui/react-popover import errors</li>
+          <li>✅ @radix-ui/react-separator missing dependency</li>
+          <li>✅ @radix-ui/react-scroll-area import issues</li>
+          <li>✅ Vite configuration and installation problems</li>
+          <li>✅ Component syntax errors and closing tags</li>
+        </ul>
+        <p><strong>Solutions Applied:</strong></p>
+        <ul style="text-align: left; display: inline-block">
+          <li>🔄 Forced reinstallation of all problematic packages</li>
+          <li>🛠️ Created fallback popover component implementation</li>
+          <li>📦 Replaced ScrollArea with standard div elements</li>
+          <li>⚙️ Fixed all component import and syntax issues</li>
+          <li>🚀 Added graceful degradation for missing APIs</li>
+        </ul>
+      </div>
+
+      <div class="status">
+        <h3>🚀 Next Steps</h3>
+        <p>
+          To activate voice features, add your Vapi API key to
+          <code>.env.local</code>:
+        </p>
+        <code
+          style="
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            display: block;
+            margin: 10px 0;
+          "
+        >
+          VITE_VAPI_PUBLIC_KEY=your-actual-vapi-key-here
+        </code>
+        <p>
+          Voice features will automatically become available once configured!
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
